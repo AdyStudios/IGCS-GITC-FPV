@@ -180,13 +180,6 @@ namespace IGCS
         XMFLOAT3 getInternalPosition() const { return _toolsCoordinates; }
 		void setInternalPosition(const XMFLOAT3& pos) { _toolsCoordinates = pos; }
 
-        /*DirectX::XMFLOAT3 _velocity = {0.0f, 0.0f, 0.0f};
-
-        float _thrustPower = 50.0f;
-        float _gravity = -9.81f;
-        float _drag = 0.98f;
-        float _cameraTilt = 30.0f;*/
-
     private:
         Camera() = default;
         ~Camera() = default;

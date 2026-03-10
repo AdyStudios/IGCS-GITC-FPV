@@ -79,8 +79,8 @@ namespace IGCS
 	#define IGCS_KEY_MOVE_UP_TARGET					0x55 // 'U' key
 	#define IGCS_KEY_MOVE_DOWN_TARGET				0x4F // 'O' key
 
-	#define IGCS_BUTTON_FOV_DECREASE				Gamepad::button_t::DOWN
-	#define IGCS_BUTTON_FOV_INCREASE				Gamepad::button_t::UP
+	#define IGCS_BUTTON_FOV_DECREASE				Gamepad::button_t::UP
+	#define IGCS_BUTTON_FOV_INCREASE				Gamepad::button_t::DOWN
 	#define IGCS_BUTTON_RESET_FOV					Gamepad::button_t::B
 	#define IGCS_BUTTON_TILT_LEFT					Gamepad::button_t::LEFT
 	#define IGCS_BUTTON_TILT_RIGHT					Gamepad::button_t::RIGHT

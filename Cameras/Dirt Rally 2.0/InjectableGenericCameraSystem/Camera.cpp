@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Part of Injectable Generic Camera System (refactored 2025) - MODIFIED FOR FPV DRONE PHYSICS
+// Part of Injectable Generic Camera System (refactored 2025) - Modded with fpv features
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ================== Camera.cpp ==================
 #include "stdafx.h"
@@ -8,8 +8,6 @@
 #include "Globals.h"
 #include "CameraManipulator.h"
 #include "PathUtils.h"
-#include <algorithm> // For std::max
-#include <Xinput.h>
 #pragma comment(lib, "Xinput.lib")
 
 using namespace DirectX;
@@ -175,41 +173,64 @@ namespace IGCS
     DirectX::XMFLOAT3 Camera::calculateLookAtRotation(const DirectX::XMFLOAT3& cameraPos,
         const DirectX::XMFLOAT3& targetPos) const noexcept
     {
+        // Calculate direction vector from camera to target
         const XMVECTOR camPos = XMLoadFloat3(&cameraPos);
         const XMVECTOR targPos = XMLoadFloat3(&targetPos);
         XMVECTOR direction = XMVectorSubtract(targPos, camPos);
+
+        // Normalize the direction vector
         direction = XMVector3Normalize(direction);
 
         XMFLOAT3 dir;
         XMStoreFloat3(&dir, direction);
 
+        // Calculate yaw (rotation around Y-axis)
+        // atan2(-x, z) gives us the yaw angle where forward is +Z
         float yaw = atan2f(-dir.x, dir.z);
+
+        // Calculate pitch (rotation around X-axis)
+        // Try positive dir.y first (inverted from original)
         float pitch = asinf(dir.y);
 
+        // Apply the same inversion logic that the camera uses for manual input
         const float inverter = Globals::instance().settings().invertY ? -_lookDirectionInverter : _lookDirectionInverter;
         pitch *= inverter;
 
+        // Apply angle offsets only if we're in angle offset mode
         if (!_useTargetOffsetMode)
         {
             pitch = clampAngle(pitch + _lookAtPitchOffset);
             yaw = clampAngle(yaw + _lookAtYawOffset);
         }
 
+        // Roll handling - always maintain current roll and apply roll offset
         float roll = clampAngle(_lookAtRollOffset);
+
         return { pitch, yaw, roll };
     }
 
     DirectX::XMFLOAT3 Camera::calculateOffsetTargetPosition(const DirectX::XMFLOAT3& playerPos,
         const DirectX::XMVECTOR& playerRotation) const noexcept
     {
+        // Convert player position to vector
         const XMVECTOR playerPosVec = XMLoadFloat3(&playerPos);
+
+        // Load the local offset
         const XMVECTOR localOffset = XMLoadFloat3(&_lookAtTargetOffset);
+
+        // Create rotation matrix from player's quaternion
         const XMMATRIX playerRotMatrix = XMMatrixRotationQuaternion(playerRotation);
+
+        // Transform the local offset to world space using player's rotation
         const XMVECTOR worldOffset = XMVector3Transform(localOffset, playerRotMatrix);
+
+        // Add the world space offset to player position
         const XMVECTOR targetPosVec = XMVectorAdd(playerPosVec, worldOffset);
 
+        // Convert back to XMFLOAT3
         XMFLOAT3 result;
         XMStoreFloat3(&result, targetPosVec);
+
         return result;
     }
 
@@ -303,11 +324,9 @@ namespace IGCS
         {
             handleLookAtMode(pt, rt);
         }
-        else
-        {
-            // ========================================================================
-            // MODIFIED: FPV ACRO DRONE PHYSICS INJECTION (MODE 2 MAPPING)
-            // ========================================================================
+        else if (s.fpvEnabled) {
+            // FPV ACRO DRONE PHYSICS
+            // ======================
             _hasValidLookAtTarget = false;
 
             // 1. MODE 2 CONTROLS & INVERSION FIXES
@@ -364,35 +383,13 @@ namespace IGCS
             s_rawLeftStickX = 0.0f;
             s_rawRightStickY = 0.0f;
             s_rawRightStickX = 0.0f;
-            // ========================================================================
         }
-
-        // ========================================================================
-            // HARDCODED FOV CONTROLS because IGCS couldn't bind it properly
-            // ========================================================================
-        XINPUT_STATE xState;
-        ZeroMemory(&xState, sizeof(XINPUT_STATE));
-
-        // Poll the first connected controller (User Index 0)
-        if (XInputGetState(0, &xState) == ERROR_SUCCESS)
+        else
         {
-            float fovChangeSpeed = 100.0f; // Adjust this if the FOV zooms too fast/slow
-
-            // Right Bumper (RB) to Zoom In / Increase FOV
-            if (XINPUT_GAMEPAD_RIGHT_SHOULDER)
-            {
-                changeFOV(fovChangeSpeed * delta);
-            }
-
-            // Left Bumper (LB) to Zoom Out / Decrease FOV
-            if (XINPUT_GAMEPAD_LEFT_SHOULDER)
-            {
-                changeFOV(-fovChangeSpeed * delta);
-            }
+            handleNormalMode(pt, rt);
         }
-        // ========================================================================
 
-        //interpolateFOV(ft);
+        interpolateFOV(ft);
         applyFinalCameraTransform(delta);
     }
 

@@ -47,28 +47,25 @@ public:
 		LSTICK = XINPUT_GAMEPAD_LEFT_THUMB,
 		RSTICK = XINPUT_GAMEPAD_RIGHT_THUMB,
 		START = XINPUT_GAMEPAD_START,
-		BACK = XINPUT_GAMEPAD_BACK,
-		L2 = 0x4000,  // Custom bit for left trigger as button
-		R2 = 0x8000   // Custom bit for right trigger as button
+		BACK = XINPUT_GAMEPAD_BACK
 	};
 	// If you have multiple gamepads, create multiple instances of the class using different indexes. The connected gamepads are numbered 0-4. The default argument is 0, meaning this instance will take control of the first (or only one) gamepad connected to the system.
 	Gamepad(int index = 0) : gpIndex{index}, buttonDownCallback{nullptr}, buttonUpCallback{nullptr}, gpState(),
 	                         buttonState{0x0},
 	                         connected(false),
 	                         invertLSY(false),
-	                         invertRSY(false),
-	                         triggerThreshold(0.5f)
+	                         invertRSY(false)
 	{
 	}
 
 	struct IdToXInput
 	{
-		int                       id;      // 1 … 16   (old dictionary value)
+		int                       id;      // 1 … 14   (old dictionary value)
 		std::uint16_t             mask;    // XINPUT_GAMEPAD_*  bit mask
 		Gamepad::button_t         button;  // enum alias for convenience
 	};
 
-	inline static constexpr std::array<IdToXInput, 16> kIdToXInputTable{ {
+	inline static constexpr std::array<IdToXInput, 14> kIdToXInputTable{ {
 			/* 1  */ {  1, XINPUT_GAMEPAD_A,              Gamepad::button_t::A      },
 			/* 2  */ {  2, XINPUT_GAMEPAD_B,              Gamepad::button_t::B      },
 			/* 3  */ {  3, XINPUT_GAMEPAD_X,              Gamepad::button_t::X      },
@@ -82,9 +79,7 @@ public:
 			/* 11 */ { 11, XINPUT_GAMEPAD_LEFT_THUMB,     Gamepad::button_t::LSTICK },
 			/* 12 */ { 12, XINPUT_GAMEPAD_RIGHT_THUMB,    Gamepad::button_t::RSTICK },
 			/* 13 */ { 13, XINPUT_GAMEPAD_START,          Gamepad::button_t::START  },
-			/* 14 */ { 14, XINPUT_GAMEPAD_BACK,           Gamepad::button_t::BACK   },
-			/* 15 */ { 15, 0x4000,                        Gamepad::button_t::L2     },
-			/* 16 */ { 16, 0x8000,                        Gamepad::button_t::R2     }
+			/* 14 */ { 14, XINPUT_GAMEPAD_BACK,           Gamepad::button_t::BACK   }
 		} };
 
 	/* --------------------------------------------------------------------------
@@ -123,9 +118,6 @@ public:
 	void setInvertLStickY(bool b);
 	// If set to true, the Y-axis of the right analog stick will be inverted.
 	void setInvertRStickY(bool b);
-	// Set the threshold (0.0 to 1.0) at which triggers are considered "pressed" as buttons. Default is 0.5.
-	void setTriggerThreshold(float threshold);
-
 	// Only use this if you want to use some XInput functionality directly. It returns a pointer to the current state.
 	XINPUT_STATE* getState();
 	// Returns the gamepad's index (the argument the constructor was given). Kind of pointless, but whatever.
@@ -139,5 +131,4 @@ private:
 	bool connected;
 	bool invertLSY;
 	bool invertRSY;
-	float triggerThreshold;
 };
