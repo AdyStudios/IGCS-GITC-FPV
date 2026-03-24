@@ -334,7 +334,7 @@ namespace IGCS
             float inputThrottle = (std::max)(0.0f, s_rawLeftStickY);
 
             float acroRate = 0.68f; // Base rotation sensitivity
-            float yawRate = 1.0f;
+            float yawRate = 1.5f;
 
             // Yaw: Left Stick X (Left/Right)
             _yaw += -s_rawLeftStickX * yawRate * delta;
